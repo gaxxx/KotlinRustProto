@@ -12,7 +12,7 @@ impl Backend {
 impl DroidBackendService for Backend {
     fn hello(&self, input: HelloIn) -> BackendResult<HelloOut> {
         Ok(HelloOut {
-            ret: 100,
+            ret: input.arg,
             msg : vec!["hello".to_owned()],
         })
     }

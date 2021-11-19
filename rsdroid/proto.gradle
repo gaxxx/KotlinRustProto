@@ -1,0 +1,35 @@
+import org.gradle.internal.os.OperatingSystem
+
+def droidProtobufFolder = new File(rootDir, "rslib-bridge/proto").getAbsolutePath()
+
+android {
+    sourceSets {
+        main {
+            proto {
+                srcDir droidProtobufFolder
+            }
+        }
+    }
+}
+
+protobuf {
+    plugins {
+        javalite {
+            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+        }
+    }
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.8.0'
+    }
+    // this is a task which wil generate classes for our proto files
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                remove java
+            }
+            task.plugins {
+                javalite {}
+            }
+        }
+    }
+}
