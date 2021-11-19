@@ -1,0 +1,18 @@
+# cargo-features = ["strip"]
+
+[package]
+name = "rsdroid"
+version = "0.1.0"
+authors = ["David Allison <davidallisongithub@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate_type = ["dylib"]
+
+[dependencies]
+jni = { version = "0.17.0", default-features = false }
+# picked bundled - TODO: Is this correct?
+rusqlite = { version = "0.23.1", features = ["trace", "functions", "collation", "bundled"] }
+
+[features]
+no-android = []
