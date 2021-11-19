@@ -4,6 +4,7 @@ class RustCore {
 
     external fun greeting(): String
     external fun callback(cb : Callback)
+    external fun run(cmd : Int ,args : ByteArray, cb : ProtoCallback)
     init {
         System.loadLibrary("rsdroid")
     }
@@ -17,4 +18,12 @@ class RustCore {
         fun onSuccess()
     }
 
+    interface ProtoCallback {
+        fun onSuccess(out : ByteArray) {
+
+        }
+        fun onErr(code: Int, msg : String) {
+
+        }
+    }
 }

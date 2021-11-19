@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import com.linkedin.android.kotinrustproto.databinding.ActivityMainBinding
 import com.linkedin.android.rsdroid.RustCore
+import com.linkedin.android.rsdroid.RustCore.ProtoCallback
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -22,6 +23,15 @@ class MainActivity : AppCompatActivity() {
                 }
             });
         })
+        val ret = RustCore.instance.run(0, ByteArray(100), object : ProtoCallback {
+            override fun onErr(code: Int, msg: String) {
+                Log.d("MainActivity", "msg");
+            }
+
+            override fun onSuccess(out: ByteArray) {
+                super.onSuccess(out)
+            }
+        });
         setContentView(binding.root);
     }
 }

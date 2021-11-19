@@ -13,6 +13,13 @@ crate_type = ["dylib"]
 jni = { version = "0.17.0", default-features = false }
 # picked bundled - TODO: Is this correct?
 rusqlite = { version = "0.23.1", features = ["trace", "functions", "collation", "bundled"] }
+prost = "0.6.1"
+anyhow= "1.0.47"
+num_enum = "0.5.4"
 
 [features]
 no-android = []
+
+
+[build-dependencies]
+prost-build = "0.6.1"

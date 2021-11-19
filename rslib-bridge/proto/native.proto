@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package Proto;
+option java_package = "com.linkedin.android.proto";
+
+service DroidBackendService {
+    rpc Hello(HelloIn) returns (HelloOut);
+    rpc Sink(Empty) returns (Empty);
+}
+
+message HelloIn{
+    int64 arg = 1;
+}
+
+message HelloOut{
+    sint32 ret = 1;
+    repeated string msg = 2;
+}
+
+message Empty {}
