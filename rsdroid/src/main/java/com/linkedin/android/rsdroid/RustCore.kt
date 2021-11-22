@@ -1,21 +1,26 @@
 package com.linkedin.android.rsdroid;
 
-class RustCore {
+import com.linkedin.android.rpc.NativeImpl
+import java.util.*
 
+class RustCore {
     external fun greeting(): String
-    external fun callback(cb : Callback)
-    external fun run(cmd : Int ,args : ByteArray, cb : ProtoCallback)
+    external fun run(cmd : Int ,args : ByteArray, cb : ProtoCallback?)
     init {
         System.loadLibrary("rsdroid")
     }
 
     companion object {
         val instance: RustCore = RustCore()
+        val navHelper : NativeHelp = instance.NativeHelp();
     }
 
 
-    interface Callback {
-        fun onSuccess()
+
+
+    interface Callback<T> {
+        fun onSuccess(arg : T)
+        fun onErr(code : Int, msg: String)
     }
 
     interface ProtoCallback {
@@ -26,4 +31,12 @@ class RustCore {
 
         }
     }
+
+    inner class NativeHelp : NativeImpl() {
+        override fun executeCommand(command: Int, args: ByteArray?, cb: ProtoCallback?) {
+            run(command, args!!, cb);
+        }
+    }
+
+
 }

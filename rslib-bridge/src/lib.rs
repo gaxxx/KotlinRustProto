@@ -48,6 +48,9 @@ pub unsafe extern fn Java_com_linkedin_android_rsdroid_RustCore_run(
         return backend.run_command_bytes2_inner_ad(command, &in_bytes);
     }));
 
+    if cb.into_inner().is_null() {
+        return
+    }
 
     match result {
         Ok(Ok(_s)) => {

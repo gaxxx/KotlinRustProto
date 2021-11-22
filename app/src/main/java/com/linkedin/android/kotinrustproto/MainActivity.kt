@@ -5,9 +5,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import com.linkedin.android.kotinrustproto.databinding.ActivityMainBinding
-import com.linkedin.android.proto.AdBackend
+import com.linkedin.android.proto.Native
+import com.linkedin.android.rpc.NativeMethods
 import com.linkedin.android.rsdroid.RustCore
 import com.linkedin.android.rsdroid.RustCore.ProtoCallback
+import com.linkedin.android.rsdroid.RustCore.NativeHelp;
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -18,24 +20,25 @@ class MainActivity : AppCompatActivity() {
         binding.text.text = RustCore.instance.greeting();
 
         binding.button.setOnClickListener(View.OnClickListener {
-            RustCore.instance.callback(object : RustCore.Callback {
-                override fun onSuccess() {
-                    binding.text.text = "Changed";
-                }
-            });
+
         })
-        val builder = AdBackend.HelloIn.newBuilder();
-        val arg = builder.setArg(1000).build();
-        RustCore.instance.run(1, arg.toByteArray(), object : ProtoCallback {
+        // call by impl
+        RustCore.navHelper.hello(
+            Native.HelloIn.newBuilder()
+                .setArg(10).build(),
+            object : RustCore.Callback<Native.HelloOut> {
             override fun onErr(code: Int, msg: String) {
                 Log.d("MainActivity", "msg");
             }
 
-            override fun onSuccess(out: ByteArray) {
-                val helloOut = AdBackend.HelloOut.parseFrom(out);
-                Log.d("MainActivity", helloOut.toString());
+            override fun onSuccess(arg: Native.HelloOut) {
+                Log.d("MainActivity", arg.toString());
             }
         });
+
+        // call by method
+        RustCore.instance.run(NativeMethods.SINK, Native.Empty.getDefaultInstance().toByteArray(), null);
+
         setContentView(binding.root);
     }
 }

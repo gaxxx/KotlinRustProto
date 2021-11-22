@@ -13,11 +13,11 @@ impl DroidBackendService for Backend {
     fn hello(&self, input: HelloIn) -> BackendResult<HelloOut> {
         Ok(HelloOut {
             ret: input.arg,
-            msg : vec!["hello".to_owned()],
+            msg : (0..input.arg).map(|_| "hello".to_owned()).collect(),
         })
     }
 
     fn sink(&self, input: Empty) -> BackendResult<Empty> {
-        todo!()
+        Ok(Empty{})
     }
 }
