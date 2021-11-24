@@ -43,7 +43,7 @@ pub trait DroidBackendService {
             input_type = method.input_type,
             rust_method = method.name
         )
-            .unwrap();
+        .unwrap();
     }
     buf.push_str(
         r#"
@@ -57,14 +57,14 @@ pub trait DroidBackendService {
         write!(
             buf,
             concat!(
-            "    fn {method_name}(&self, input: {input_type}) -> ",
-            "BackendResult<{output_type}>;\n"
+                "    fn {method_name}(&self, input: {input_type}) -> ",
+                "BackendResult<{output_type}>;\n"
             ),
             method_name = method.name,
             input_type = method.input_type,
             output_type = method.output_type
         )
-            .unwrap();
+        .unwrap();
     }
     buf.push_str("}\n");
 }
@@ -79,7 +79,6 @@ impl prost_build::ServiceGenerator for CustomGenerator {
 fn service_generator() -> Box<dyn prost_build::ServiceGenerator> {
     Box::new(CustomGenerator {})
 }
-
 
 fn main() -> std::io::Result<()> {
     // output protobuf generated code

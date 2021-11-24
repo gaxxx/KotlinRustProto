@@ -1,15 +1,11 @@
 package com.linkedin.android.kotinrustproto
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Context
 import android.os.Bundle
-import android.util.Log
-import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.linkedin.android.kotinrustproto.databinding.ActivityMainBinding
 import com.linkedin.android.proto.Native
-import com.linkedin.android.rpc.NativeMethods
 import com.linkedin.android.rsdroid.RustCore
-import com.linkedin.android.rsdroid.RustCore.ProtoCallback
-import com.linkedin.android.rsdroid.RustCore.NativeHelp;
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -19,26 +15,78 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater);
         binding.text.text = RustCore.instance.greeting();
 
-        binding.button.setOnClickListener(View.OnClickListener {
-
-        })
-        // call by impl
-        RustCore.navHelper.hello(
-            Native.HelloIn.newBuilder()
-                .setArg(10).build(),
-            object : RustCore.Callback<Native.HelloOut> {
+        val path: String = applicationContext.cacheDir.absolutePath + "/test"
+        RustCore.navHelper.open(Native.Str.newBuilder().setVal(path).build(),  object : RustCore.Callback<Native.Resp>{
             override fun onErr(code: Int, msg: String) {
-                Log.d("MainActivity", "msg");
-            }
-
-            override fun onSuccess(arg: Native.HelloOut) {
-                Log.d("MainActivity", arg.toString());
+                super.onErr(code, msg)
             }
         });
 
-        // call by method
-        RustCore.instance.run(NativeMethods.SINK, Native.Empty.getDefaultInstance().toByteArray(), null);
+        val iterCount = 1000;
+        binding.button.setOnClickListener({
+            var start = System.currentTimeMillis();
+            for (i in 0..iterCount) {
+                RustCore.navHelper.save(
+                    Native.SaveIn.newBuilder()
+                        .setKey("test_%d".format(i))
+                        .setVal("value_%d_10086".format(i))
+                        .build(),
+                    object : RustCore.Callback<Native.Resp> {}
+                );
+            }
+            var end = System.currentTimeMillis();
+
+            binding.text.text = "takes %d ms to write".format(end - start);
+            for (i in 0..iterCount) {
+                RustCore.navHelper.get(
+                    Native.Str.newBuilder().setVal("test_%d".format(i)).build(),
+                    object : RustCore.Callback<Native.Str> {
+                        override fun onSuccess(arg: Native.Str) {
+                            if (!arg.getVal().equals("value_%d_10086".format(i))) {
+                                // throw RuntimeException("oooops")
+                            }
+                        }
+                    }
+
+                );
+            }
+            var final = System.currentTimeMillis();
+            var append = "\ntakes %d ms to read".format(final - end);
+            binding.text.text = binding.text.text.toString() + append
+        })
+
+
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        binding.button2.setOnClickListener({
+            var start = System.currentTimeMillis();
+            for (i in 0..iterCount) {
+                sharedPref.edit().putString("test_%d".format(i), "value_%d_10086".format(i)).apply()
+            }
+            var end = System.currentTimeMillis();
+
+            binding.text.text = "takes %d ms to write".format(end - start);
+            for (i in 0..iterCount) {
+                val item = sharedPref.getString("test_%d".format(i), "")
+                if (!item.equals("value_%d_10086".format(i))) {
+                    throw RuntimeException("oooops")
+                }
+            }
+            var final = System.currentTimeMillis();
+            var append = "\ntakes %d ms to read".format(final - end);
+            binding.text.text = binding.text.text.toString() + append
+        })
 
         setContentView(binding.root);
+
+    }
+
+    fun startMeasure() {
+        binding.button2.isEnabled = false
+        binding.button.isEnabled = false
+    }
+
+    fun endMeasure() {
+        binding.button2.isEnabled = true
+        binding.button.isEnabled = true
     }
 }

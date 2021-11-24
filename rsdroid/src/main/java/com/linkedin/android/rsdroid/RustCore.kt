@@ -19,8 +19,8 @@ class RustCore {
 
 
     interface Callback<T> {
-        fun onSuccess(arg : T)
-        fun onErr(code : Int, msg: String)
+        fun onSuccess(arg : T) {}
+        fun onErr(code : Int, msg: String) {}
     }
 
     interface ProtoCallback {
