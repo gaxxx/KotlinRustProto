@@ -1,17 +1,17 @@
-use std::sync::{Arc, RwLock};
-use rkv::backend::{LmdbEnvironment, Lmdb, BackendEnvironmentBuilder, LmdbDatabase};
-use rkv::{Rkv, Manager, StoreOptions, SingleStore};
-use std::path::Path;
-use std::fs;
-use std::sync::Mutex;
+use rkv::backend::{BackendEnvironmentBuilder, Lmdb, LmdbDatabase, LmdbEnvironment};
+use rkv::{Manager, Rkv, SingleStore, StoreOptions};
 use std::borrow::BorrowMut;
+use std::fs;
+use std::path::Path;
+use std::sync::Mutex;
+use std::sync::{Arc, RwLock};
 
-static mut KV : Option<Arc<RwLock<Rkv<LmdbEnvironment>>>> = None;
-static mut STORE : Option<SingleStore<LmdbDatabase>> = None;
+static mut KV: Option<Arc<RwLock<Rkv<LmdbEnvironment>>>> = None;
+static mut STORE: Option<SingleStore<LmdbDatabase>> = None;
 use once_cell::sync::Lazy;
 static KV_LOCK: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 
-pub fn open(path : &Path) {
+pub fn open(path: &Path) {
     let mut kv_lock = KV_LOCK.lock().unwrap();
     if *kv_lock == true {
         panic!("already opened")
@@ -32,7 +32,7 @@ pub fn open(path : &Path) {
         })
         .unwrap();
 
-    let store : SingleStore<LmdbDatabase>;
+    let store: SingleStore<LmdbDatabase>;
     {
         let env = created_arc.read().unwrap();
         //let mut option = StoreOptions::<LmdbDatabaseFlags>::create();
@@ -51,9 +51,7 @@ pub fn crc() -> Arc<RwLock<Rkv<LmdbEnvironment>>> {
     if !*lock {
         panic!("need open a store");
     }
-    unsafe {
-        KV.clone().unwrap()
-    }
+    unsafe { KV.clone().unwrap() }
 }
 
 pub fn store() -> SingleStore<LmdbDatabase> {
@@ -61,7 +59,5 @@ pub fn store() -> SingleStore<LmdbDatabase> {
     if !*lock {
         panic!("need open a store");
     }
-    unsafe {
-        STORE.clone().unwrap()
-    }
+    unsafe { STORE.clone().unwrap() }
 }

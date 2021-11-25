@@ -4,9 +4,14 @@ package Proto;
 option java_package = "com.linkedin.android.proto";
 
 service DroidBackendService {
-    rpc Open(Str) returns (Resp);
+    rpc Create(OpenIn) returns (Resp);
     rpc Save(SaveIn) returns (Resp);
     rpc Get(Str) returns (Str);
+}
+
+message OpenIn {
+    string path = 1;
+    int32 mode = 2;
 }
 
 message Str {

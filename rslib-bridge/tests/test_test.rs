@@ -1,12 +1,12 @@
 use rsdroid::proto::*;
-use rsdroid::{backend, db, lmdb};
+use rsdroid::{backend, db};
 use env_logger;
 use std::path::Path;
 
 fn setup() {
     env_logger::init();
     log::info!("log init");
-    db::open(Path::new("/tmp/test"));
+    db::create(Path::new("/tmp/test"));
 }
 
 fn teardown() {}
