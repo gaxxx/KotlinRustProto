@@ -5,16 +5,19 @@ pub mod proto;
 mod mem;
 
 extern crate log;
+
 use crate::backend::Backend;
-use crate::proto::DroidBackendService;
+use crate::proto::{BackendResult, DroidBackendService, Resp};
 use android_logger::Config;
 use backtrace::Backtrace;
 use jni::objects::{JByteBuffer, JClass, JObject, ReleaseMode};
 use jni::sys::{jbyteArray, jint, jstring, JNI_VERSION_1_6};
 use jni::{JNIEnv, JavaVM};
 use std::ffi::{c_void, CString};
-use std::panic;
+use std::{panic, thread};
+use prost::Message;
 use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::ptr::slice_from_raw_parts_mut;
 
 #[allow(non_snake_case)]
 #[no_mangle]
@@ -26,20 +29,6 @@ pub extern "system" fn JNI_OnLoad(_ : JavaVM, _: *mut c_void) -> jint {
     );
 
     JNI_VERSION_1_6
-    //let mut env = vm.get_env().unwrap();
-    //let mut c = env.find_class("com/linkedin/android/rpc/NativeImpl/RustCore").unwrap();
-    //if c.is_null() {
-    //    return JNI_ERR;
-    //}
-
-    //
-    //env.register_native_methods(c, &[NativeMethod {
-    //    name: "Java_com_linkedin_android_rsdroid_RustCore_run".into(),
-    //    sig : "(ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I".into(),
-    //    fn_ptr : Java_com_linkedin_android_rsdroid_RustCore_run as *mut c_void,
-    //}]).unwrap();
-    //
-    //JNI_VERSION_1_6
 }
 
 #[no_mangle]
@@ -182,22 +171,37 @@ pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_callback(
     env.call_method(callback, "onSuccess", "()V", &[]).unwrap();
 }
 
+unsafe fn fill_resp(env : JNIEnv, resp : jbyteArray, code : i32, s : String) {
+    let inner = env.get_boolean_array_elements(resp, ReleaseMode::NoCopyBack).unwrap();
+    let org_len = inner.size().unwrap() as usize;
+    let mut len_trim = 0;
+    if org_len > 16 {
+        len_trim = org_len - 16;
+    }
+    let mut s_trim = s;
+    if s_trim.len() > len_trim {
+        s_trim = s_trim.split_at(len_trim).0.to_owned()
+    }
+    log::info!("ready to fill resp org:{} - dst:{} - code:{} - msg: {}", org_len, len_trim, code, s_trim);
+    let resp = Resp {
+        ret : code,
+        msg : s_trim
+    };
+    let mut item = &mut *slice_from_raw_parts_mut(inner.as_ptr(), org_len);
+    resp.encode(&mut item).unwrap();
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_run(
     env: JNIEnv,
     _: JClass,
     command: jint,
     args: jbyteArray,
-    cb: JObject,
-) {
-    android_logger::init_once(
-        Config::default()
-            .with_tag("RustNativeCore")
-            .with_min_level(log::Level::Trace),
-    );
+    resp : jbyteArray
+) -> jbyteArray {
     let backend = Backend::new();
 
-    let result = catch_unwind(AssertUnwindSafe(|| {
+    let result: thread::Result<BackendResult<Vec<u8>>> = catch_unwind(AssertUnwindSafe(|| {
         panic::set_hook(Box::new(|_| {
             let backtrace = Backtrace::new();
             log::error!("ops: {:?}", backtrace);
@@ -205,29 +209,23 @@ pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_run(
 
         let command: u32 = command as u32;
         let in_bytes = env.convert_byte_array(args).unwrap();
-        return backend.run_command_bytes2_inner_ad(command, &in_bytes);
+        backend.run_command_bytes2_inner_ad(command, &in_bytes)
     }));
-
     match result {
-        Ok(Ok(s)) => {
-            let data = env.byte_array_from_slice(&s).unwrap();
-            env.call_method(cb, "onSuccess", "([B)V", &[data.into()])
-                .unwrap();
-            return;
+        Ok(ret)  => {
+            return match ret {
+                Ok(s) => env.byte_array_from_slice(&s).unwrap(),
+                Err(e) => {
+                    fill_resp(env, resp, 100, e.to_string());
+                    env.byte_array_from_slice(&[]).unwrap()
+                }
+            }
         }
-        _ => {
-            let world_ptr = CString::new("error").unwrap();
-            let output = env
-                .new_string(world_ptr.to_str().unwrap())
-                .expect("Couldn't create java string!");
-            env.call_method(
-                cb,
-                "onErr",
-                "(ILjava/lang/String;)V",
-                &[10.into(), output.into()],
-            )
-            .unwrap();
-            return;
+        Err(e) => {
+            if let Ok(s) = e.downcast::<String>() {
+                fill_resp(env, resp, 1000, *s)
+            }
         }
     }
+    env.byte_array_from_slice(&[]).unwrap()
 }

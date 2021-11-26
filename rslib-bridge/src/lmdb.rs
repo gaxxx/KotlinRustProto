@@ -14,9 +14,8 @@ static KV_LOCK: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 pub fn open(path: &Path) {
     let mut kv_lock = KV_LOCK.lock().unwrap();
     if *kv_lock == true {
-        panic!("already opened")
+        return
     }
-    fs::remove_dir_all(&path).unwrap();
     fs::create_dir_all(&path).unwrap();
 
     // The `Manager` enforces that each process opens the same environment at most once by
@@ -26,8 +25,7 @@ pub fn open(path: &Path) {
     let created_arc = manager
         .get_or_create(path, |path| {
             let mut builder = Lmdb::new();
-            builder.set_map_size(1024 * 1024 * 1024);
-            builder.set_max_dbs(100);
+            builder.set_map_size(1024 * 1024 * 100);
             Rkv::from_builder(path, builder)
         })
         .unwrap();

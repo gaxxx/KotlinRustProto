@@ -7,6 +7,7 @@ static KV_STORE: Lazy<Arc<RwLock<HashMap<String, String>>>> = Lazy::new(|| {
     Arc::new(RwLock::new(HashMap::new()))
 });
 
+#[allow(dead_code)]
 pub fn create(_ : &Path) {
 }
 

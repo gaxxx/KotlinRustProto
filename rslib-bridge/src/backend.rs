@@ -32,6 +32,7 @@ impl DroidBackendService for Backend {
         match End::from(USE_END.load(Ordering::Relaxed) as i8) {
             End::LMDB => lmdb::open(Path::new(&input.path)),
             End::SLED => {
+                log::info!("ready to create {:?}", input);
                 db::create(Path::new(&input.path));
             }
             _ => {}

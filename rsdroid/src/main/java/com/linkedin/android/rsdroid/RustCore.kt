@@ -1,6 +1,6 @@
 package com.linkedin.android.rsdroid;
 
-import com.linkedin.android.rpc.NativeImpl
+import com.linkedin.android.rpc.NativeService
 import java.nio.ByteBuffer
 
 class RustCore {
@@ -21,7 +21,7 @@ class RustCore {
     external fun readByteBuffer(b : ByteBuffer)
     external fun writeByteBuffer(b : ByteBuffer)
 
-    external fun run(cmd : Int ,args : ByteArray, cb : ProtoCallback?)
+    external fun run(cmd : Int ,args : ByteArray, resp : ByteArray) : ByteArray
     init {
         System.loadLibrary("rsdroid")
     }
@@ -48,9 +48,9 @@ class RustCore {
         }
     }
 
-    inner class NativeHelp : NativeImpl() {
-        override fun executeCommand(command: Int, args: ByteArray?, cb: ProtoCallback?) {
-            run(command, args!!, cb);
+    inner class NativeHelp : NativeService() {
+        override fun executeCommand(command: Int, args: ByteArray?, resp: ByteArray?): ByteArray {
+            return RustCore.instance.run(command,args!!, resp!! )
         }
     }
 

@@ -12,9 +12,8 @@ static KV_LOCK: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
 pub fn create(path: &Path) {
     let mut kv_lock = KV_LOCK.write().unwrap();
     if *kv_lock == true {
-        panic!("already opened")
+        return
     }
-    fs::remove_dir_all(&path).unwrap();
     fs::create_dir_all(&path).unwrap();
     let cfg = Config::new(path);
     let store = Store::new(cfg).unwrap();

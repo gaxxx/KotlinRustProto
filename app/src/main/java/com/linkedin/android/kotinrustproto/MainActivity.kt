@@ -2,12 +2,9 @@ package com.linkedin.android.kotinrustproto
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.google.protobuf.CodedOutputStream
 import com.linkedin.android.kotinrustproto.databinding.ActivityMainBinding
 import com.linkedin.android.proto.Native
-import com.linkedin.android.rpc.NativeMethods
 import com.linkedin.android.rsdroid.RustCore
 
 class MainActivity : AppCompatActivity() {
@@ -59,7 +56,7 @@ class MainActivity : AppCompatActivity() {
                 RustCore.navHelper.save(Native.SaveIn.newBuilder()
                     .setKey("test_%d".format(i))
                     .setVal("value_%d_10086".format(i)).build(),
-                    object : RustCore.Callback<Native.Resp>{},
+                    object : RustCore.Callback<Native.Empty>{},
                 )
                  */
             }
@@ -71,16 +68,15 @@ class MainActivity : AppCompatActivity() {
 
         val funNativeMemRead = object : Fun {
             override fun onCall(i : Int) {
+                /*
                 val out = RustCore.instance.get("test_%d".format(i));
                 val test = false;
-                // use for debug
                 if (test) {
 
                 }
-                /*
+                 */
                 RustCore.navHelper.get(Native.Str.newBuilder().setVal("test_%d".format(i)).build()
                     , object : RustCore.Callback<Native.Str>{})
-                 */
             }
 
             override fun String(): String {
@@ -95,7 +91,7 @@ class MainActivity : AppCompatActivity() {
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMemRead);
             RustCore.navHelper.create(
                 Native.OpenIn.newBuilder().setPath("").setMode(0).build(),
-                object : RustCore.Callback<Native.Resp>{}
+                object : RustCore.Callback<Native.Empty>{}
             )
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMem)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMemRead)
@@ -135,7 +131,7 @@ class MainActivity : AppCompatActivity() {
                 RustCore.navHelper.save(Native.SaveIn.newBuilder()
                     .setKey("test_%d".format(i))
                     .setVal("value_%d_10086".format(i)).build(),
-                    object : RustCore.Callback<Native.Resp>{},
+                    object : RustCore.Callback<Native.Empty>{},
                 )
             }
 
@@ -160,10 +156,45 @@ class MainActivity : AppCompatActivity() {
         binding.fuckingSlow.setOnClickListener({
             val path: String = applicationContext.cacheDir.absolutePath + "/test"
             var dbPath = Native.OpenIn.newBuilder().setPath(path).setMode(2).build();
-            RustCore.navHelper.create(dbPath, object : RustCore.Callback<Native.Resp>{})
+            RustCore.navHelper.create(dbPath, object : RustCore.Callback<Native.Empty>{})
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledWrite);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledRead);
         });
+
+        val funLmdbWrite = object : Fun {
+            override fun onCall(i : Int) {
+                RustCore.navHelper.save(Native.SaveIn.newBuilder()
+                    .setKey("test_%d".format(i))
+                    .setVal("value_%d_10086".format(i)).build(),
+                    object : RustCore.Callback<Native.Empty>{},
+                )
+            }
+
+            override fun String(): String {
+                return "LmdbWrite"
+            }
+
+        }
+
+        val funLmdbRead = object : Fun {
+            override fun onCall(i : Int) {
+                RustCore.navHelper.get(Native.Str.newBuilder().setVal("test_%d".format(i)).build()
+                    , object : RustCore.Callback<Native.Str>{})
+            }
+
+            override fun String(): String {
+                return "LmdbRead"
+            }
+        }
+
+
+        binding.lmdb.setOnClickListener {
+            val path: String = applicationContext.cacheDir.absolutePath + "/lmdb"
+            var dbPath = Native.OpenIn.newBuilder().setPath(path).setMode(1).build();
+            RustCore.navHelper.create(dbPath, object : RustCore.Callback<Native.Empty> {})
+            binding.text.text = binding.text.text.toString() + "\n" + testFunc(funLmdbWrite);
+            binding.text.text = binding.text.text.toString() + "\n" + testFunc(funLmdbRead);
+        };
 
 
 

@@ -6,7 +6,11 @@ use std::path::Path;
 fn setup() {
     env_logger::init();
     log::info!("log init");
-    db::create(Path::new("/tmp/test"));
+    let bd = backend::Backend::new();
+    bd.create(OpenIn {
+        path : "/tmp/test".into(),
+        mode : 2,
+    });
 }
 
 fn teardown() {}
