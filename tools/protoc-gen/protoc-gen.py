@@ -19,10 +19,9 @@ def parse(str):
 
 
 class RPC:
-    def __init__(self, service, command_num, methods):
+    def __init__(self, service, command_num):
         self.method = service
         self.command_num = command_num
-        self.method_lookup = methods
 
     def is_valid(self):
         return self.get_input() and self.get_output()
@@ -85,11 +84,10 @@ class RPC:
 
 def traverse(proto_file):
     classes = []
-    method_lookup = {item.method.name: item for item in set(methods)}
 
     for f in proto_file.service:
         for i, m in enumerate(f.method):
-            cls = RPC(m, i + 1, method_lookup)
+            cls = RPC(m, i + 1)
             if not cls.is_valid():
                 raise ValueError(str(m))
             classes.append(cls)

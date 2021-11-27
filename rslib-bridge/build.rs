@@ -1,6 +1,7 @@
 use std::fmt::Write;
 use std::path::Path;
 use std::process::Command;
+use itertools::Itertools;
 
 // TODO: See if we can reference anki/build.rs so there's no code duplication
 
@@ -66,6 +67,14 @@ pub trait DroidBackendService {
         )
         .unwrap();
     }
+    let signature = &service.methods.iter().map(|m| {
+        format!("{}:{}:{}", m.input_type, m.name, m.output_type)
+    }).join("\n");
+    buf.push_str(&format!(r#"
+        fn signure() -> &'static str {{
+            return "{}";
+        }}
+    "#, signature));
     buf.push_str("}\n");
 }
 

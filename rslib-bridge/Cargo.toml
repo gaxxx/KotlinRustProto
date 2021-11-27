@@ -21,9 +21,10 @@ anyhow= "1.0.47"
 num_enum = "0.5.4"
 once_cell = "1.8.0"
 backtrace = "0.3"
-android_logger = "0.10"
+android_logger = "0.10.1"
 log = "0.4.14"
 kv="0.22"
+serial_test="0.4.0"
 
 [features]
 no-android = []
@@ -34,3 +35,4 @@ env_logger = "0.9.0"
 
 [build-dependencies]
 prost-build = "0.6.1"
+itertools="0.10.1"

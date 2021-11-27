@@ -1,46 +1,76 @@
 use rsdroid::proto::*;
-use rsdroid::{backend, db};
+use rsdroid::{backend};
 use env_logger;
-use std::path::Path;
+#[macro_use] extern crate serial_test;
 
 fn setup() {
-    env_logger::init();
+    env_logger::try_init().unwrap();
     log::info!("log init");
-    let bd = backend::Backend::new();
-    bd.create(OpenIn {
-        path : "/tmp/test".into(),
-        mode : 2,
-    });
 }
 
 fn teardown() {}
 
+fn read_write() {
+    let bd = backend::Backend::new();
+    for i in 1..1000 {
+        bd.save(SaveIn {
+            key : format!("test_{}", i),
+            val : format!("value_{}_10086", i),
+        }).unwrap();
+    }
+
+    for i in 1..1000 {
+        let val = bd.get(Str {
+            val : format!("test_{}", i),
+        }).unwrap();
+        assert!(val.val.eq(
+            &format!("value_{}_10086", i)
+        ))
+
+    }
+
+}
+
 #[test]
-fn test_read() {
+#[serial]
+pub fn test_lmdb() {
     run_test(|| {
         let bd = backend::Backend::new();
-        let ret = bd.get(Str{
-            val : "test".into(),
-        });
-        assert!(ret.is_ok());
+        bd.create(OpenIn{
+            path : "/tmp/lmdb".into(),
+            mode : 1,
+        }).unwrap();
+        read_write();
     })
 }
 
 #[test]
-fn test_write() {
+#[serial]
+fn test_sled() {
     run_test(|| {
         let bd = backend::Backend::new();
-        let ret = bd.save(SaveIn {
-            key : "key".into(),
-            val : "value".into()
-        });
-        assert!(ret.is_ok());
-        let ret = bd.get(Str{
-            val : "key".into(),
+        bd.create(OpenIn{
+            path : "/tmp/sled".into(),
+            mode : 2,
         }).unwrap();
-        assert!(ret.val.eq("value"));
+        read_write();
     })
 }
+
+#[test]
+#[serial]
+fn test_mem() {
+    run_test(|| {
+        let bd = backend::Backend::new();
+        bd.create(OpenIn{
+            path : "".into(),
+            mode : 0,
+        }).unwrap();
+        read_write();
+    })
+}
+
+
 
 fn run_test<T>(test: T) -> ()
     where T: FnOnce() -> ()

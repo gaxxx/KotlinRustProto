@@ -30,7 +30,7 @@ impl DroidBackendService for Backend {
     fn create(&self, input: OpenIn) -> BackendResult<Resp> {
         USE_END.store(input.mode, Ordering::Relaxed);
         match End::from(USE_END.load(Ordering::Relaxed) as i8) {
-            End::LMDB => lmdb::open(Path::new(&input.path)),
+            End::LMDB => return lmdb::open(Path::new(&input.path)),
             End::SLED => {
                 log::info!("ready to create {:?}", input);
                 db::create(Path::new(&input.path));
@@ -83,6 +83,7 @@ impl DroidBackendService for Backend {
                         val: str.to_owned(),
                     });
                 } else {
+                    return Err(anyhow::anyhow!("not exists"))
                 }
             }
             End::SLED => {

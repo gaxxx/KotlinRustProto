@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.linkedin.android.kotinrustproto.databinding.ActivityMainBinding
 import com.linkedin.android.proto.Native
 import com.linkedin.android.rsdroid.RustCore
+import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -52,13 +53,6 @@ class MainActivity : AppCompatActivity() {
                     "test_%d".format(i),
                     "value_%d_10086".format(i)
                 )
-                /*
-                RustCore.navHelper.save(Native.SaveIn.newBuilder()
-                    .setKey("test_%d".format(i))
-                    .setVal("value_%d_10086".format(i)).build(),
-                    object : RustCore.Callback<Native.Empty>{},
-                )
-                 */
             }
 
             override fun String(): String {
@@ -66,19 +60,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val funNativeMemRead = object : Fun {
-            override fun onCall(i : Int) {
-                /*
-                val out = RustCore.instance.get("test_%d".format(i));
-                val test = false;
-                if (test) {
-
-                }
-                 */
-                RustCore.navHelper.get(Native.Str.newBuilder().setVal("test_%d".format(i)).build()
-                    , object : RustCore.Callback<Native.Str>{})
-            }
-
+        val funNativeMemRead = object : NavReadFun() {
             override fun String(): String {
                 return "Native Mem Read"
             }
@@ -91,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMemRead);
             RustCore.navHelper.create(
                 Native.OpenIn.newBuilder().setPath("").setMode(0).build(),
-                object : RustCore.Callback<Native.Empty>{}
+                emptyCallback,
             )
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMem)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMemRead)
@@ -126,27 +108,14 @@ class MainActivity : AppCompatActivity() {
         })
 
 
-        val funSledWrite = object : Fun {
-            override fun onCall(i : Int) {
-                RustCore.navHelper.save(Native.SaveIn.newBuilder()
-                    .setKey("test_%d".format(i))
-                    .setVal("value_%d_10086".format(i)).build(),
-                    object : RustCore.Callback<Native.Empty>{},
-                )
-            }
-
+        val funSledWrite = object : NavSaveFun() {
             override fun String(): String {
                 return "SledWrite"
             }
 
         }
 
-        val funSledRead = object : Fun {
-            override fun onCall(i : Int) {
-                RustCore.navHelper.get(Native.Str.newBuilder().setVal("test_%d".format(i)).build()
-                    , object : RustCore.Callback<Native.Str>{})
-            }
-
+        val funSledRead = object : NavReadFun() {
             override fun String(): String {
                 return "SledRead"
             }
@@ -156,32 +125,19 @@ class MainActivity : AppCompatActivity() {
         binding.fuckingSlow.setOnClickListener({
             val path: String = applicationContext.cacheDir.absolutePath + "/test"
             var dbPath = Native.OpenIn.newBuilder().setPath(path).setMode(2).build();
-            RustCore.navHelper.create(dbPath, object : RustCore.Callback<Native.Empty>{})
+            RustCore.navHelper.create(dbPath, emptyCallback)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledWrite);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledRead);
         });
 
-        val funLmdbWrite = object : Fun {
-            override fun onCall(i : Int) {
-                RustCore.navHelper.save(Native.SaveIn.newBuilder()
-                    .setKey("test_%d".format(i))
-                    .setVal("value_%d_10086".format(i)).build(),
-                    object : RustCore.Callback<Native.Empty>{},
-                )
-            }
-
+        val funLmdbWrite = object : NavSaveFun() {
             override fun String(): String {
                 return "LmdbWrite"
             }
 
         }
 
-        val funLmdbRead = object : Fun {
-            override fun onCall(i : Int) {
-                RustCore.navHelper.get(Native.Str.newBuilder().setVal("test_%d".format(i)).build()
-                    , object : RustCore.Callback<Native.Str>{})
-            }
-
+        val funLmdbRead = object : NavReadFun() {
             override fun String(): String {
                 return "LmdbRead"
             }
@@ -191,7 +147,7 @@ class MainActivity : AppCompatActivity() {
         binding.lmdb.setOnClickListener {
             val path: String = applicationContext.cacheDir.absolutePath + "/lmdb"
             var dbPath = Native.OpenIn.newBuilder().setPath(path).setMode(1).build();
-            RustCore.navHelper.create(dbPath, object : RustCore.Callback<Native.Empty> {})
+            RustCore.navHelper.create(dbPath, emptyCallback)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funLmdbWrite);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funLmdbRead);
         };
@@ -327,16 +283,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun startMeasure() {
-        binding.button2.isEnabled = false
-        binding.button.isEnabled = false
-    }
-
-    fun endMeasure() {
-        binding.button2.isEnabled = true
-        binding.button.isEnabled = true
-    }
-
     fun testFunc(ff : Fun) : String {
         val iterCount = 1000;
         var start = System.currentTimeMillis();
@@ -348,8 +294,51 @@ class MainActivity : AppCompatActivity() {
         return "%s takes %d ms ".format(ff.String(), end - start);
     }
 
+
+    abstract class NavSaveFun : Fun {
+        override fun onCall(i: Int) {
+            RustCore.navHelper.save(Native.SaveIn.newBuilder()
+                .setKey("test_%d".format(i))
+                .setVal("value_%d_10086".format(i)).build(),
+                emptyCallback)
+        }
+
+        abstract override fun String() : String
+
+    }
+
+    abstract class NavReadFun : Fun {
+        override fun onCall(i: Int) {
+            RustCore.navHelper.get(Native.Str.newBuilder().setVal("test_%d".format(i)).build()
+                , strCallback)
+        }
+
+        abstract override fun String(): String;
+
+    }
+
     interface Fun {
         fun onCall(i : Int)
         fun String() : String
+    }
+}
+
+object emptyCallback : RustCore.Callback<Native.Empty> {
+    override fun onSuccess(arg: Native.Empty) {
+        super.onSuccess(arg)
+    }
+
+    override fun onErr(code: Int, msg: String) {
+        super.onErr(code, msg)
+    }
+}
+
+object strCallback : RustCore.Callback<Native.Str> {
+    override fun onSuccess(arg: Native.Str) {
+        super.onSuccess(arg)
+    }
+
+    override fun onErr(code: Int, msg: String) {
+        throw Exception("ooops")
     }
 }

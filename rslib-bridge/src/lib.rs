@@ -4,6 +4,7 @@ pub mod lmdb;
 pub mod proto;
 mod mem;
 
+
 extern crate log;
 
 use crate::backend::Backend;
@@ -15,9 +16,11 @@ use jni::sys::{jbyteArray, jint, jstring, JNI_VERSION_1_6};
 use jni::{JNIEnv, JavaVM};
 use std::ffi::{c_void, CString};
 use std::{panic, thread};
-use prost::Message;
+use prost::{Message};
 use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::ptr::slice_from_raw_parts_mut;
+use std::ptr::{slice_from_raw_parts_mut, slice_from_raw_parts};
+use prost::bytes::BufMut;
+use std::mem::MaybeUninit;
 
 #[allow(non_snake_case)]
 #[no_mangle]
@@ -171,8 +174,8 @@ pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_callback(
     env.call_method(callback, "onSuccess", "()V", &[]).unwrap();
 }
 
-unsafe fn fill_resp(env : JNIEnv, resp : jbyteArray, code : i32, s : String) {
-    let inner = env.get_boolean_array_elements(resp, ReleaseMode::NoCopyBack).unwrap();
+unsafe fn fill_resp(env : JNIEnv, resp : jbyteArray, code : i32, s : String) -> BackendResult<()> {
+    let inner = env.get_byte_array_elements(resp, ReleaseMode::CopyBack)?;
     let org_len = inner.size().unwrap() as usize;
     let mut len_trim = 0;
     if org_len > 16 {
@@ -182,13 +185,17 @@ unsafe fn fill_resp(env : JNIEnv, resp : jbyteArray, code : i32, s : String) {
     if s_trim.len() > len_trim {
         s_trim = s_trim.split_at(len_trim).0.to_owned()
     }
-    log::info!("ready to fill resp org:{} - dst:{} - code:{} - msg: {}", org_len, len_trim, code, s_trim);
     let resp = Resp {
         ret : code,
         msg : s_trim
     };
-    let mut item = &mut *slice_from_raw_parts_mut(inner.as_ptr(), org_len);
-    resp.encode(&mut item).unwrap();
+    let mut buf = &mut *slice_from_raw_parts_mut(inner.as_ptr() as *mut u8, org_len);
+    resp.encode(&mut buf)?;
+    // set end tag for java
+    buf.bytes_mut()[0] = MaybeUninit::new(10 as u8);
+    buf.advance_mut(1);
+    prost::encode_length_delimiter(buf.remaining_mut() - 1, &mut buf)?;
+    Ok(())
 }
 
 #[no_mangle]
@@ -208,22 +215,23 @@ pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_run(
         }));
 
         let command: u32 = command as u32;
-        let in_bytes = env.convert_byte_array(args).unwrap();
-        backend.run_command_bytes2_inner_ad(command, &in_bytes)
+        let inner = env.get_byte_array_elements(args, ReleaseMode::NoCopyBack).unwrap();
+        let in_bytes = slice_from_raw_parts(inner.as_ptr() as *const u8, inner.size().unwrap() as usize);
+        backend.run_command_bytes2_inner_ad(command, &*in_bytes)
     }));
     match result {
         Ok(ret)  => {
             return match ret {
                 Ok(s) => env.byte_array_from_slice(&s).unwrap(),
                 Err(e) => {
-                    fill_resp(env, resp, 100, e.to_string());
+                    fill_resp(env, resp, 100, e.to_string()).unwrap();
                     env.byte_array_from_slice(&[]).unwrap()
                 }
             }
         }
         Err(e) => {
             if let Ok(s) = e.downcast::<String>() {
-                fill_resp(env, resp, 1000, *s)
+                fill_resp(env, resp, 1000, *s).unwrap();
             }
         }
     }
