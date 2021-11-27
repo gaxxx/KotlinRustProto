@@ -13,7 +13,7 @@ use android_logger::Config;
 use backtrace::Backtrace;
 use jni::objects::{JByteBuffer, JClass, JObject, ReleaseMode};
 use jni::sys::{jbyteArray, jint, jstring, JNI_VERSION_1_6};
-use jni::{JNIEnv, JavaVM};
+use jni::{JNIEnv, JavaVM, NativeMethod};
 use std::ffi::{c_void};
 use std::{panic, thread};
 use prost::{Message};
@@ -22,14 +22,39 @@ use std::ptr::{slice_from_raw_parts_mut, slice_from_raw_parts};
 use prost::bytes::BufMut;
 use std::mem::MaybeUninit;
 
+// This is a simple macro named `say_hello`.
+macro_rules! jmethod{
+
+    ($fun:tt, $sig: expr ) => {
+        // The macro will expand into the contents of this block.
+        NativeMethod {
+            name : stringify!($fun).into(),
+            sig : $sig,
+            fn_ptr : $fun as *mut c_void,
+
+        }
+    };
+}
+
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "system" fn JNI_OnLoad(_ : JavaVM, _: *mut c_void) -> jint {
+pub extern "system" fn JNI_OnLoad(vm : JavaVM, _: *mut c_void) -> jint {
     android_logger::init_once(
         Config::default()
             .with_tag("RustNativeCore")
             .with_min_level(log::Level::Trace),
     );
+
+    let env = vm.get_env().unwrap();
+    let jcls = env.find_class("com/linkedin/android/rsdroid/RustCore").unwrap();
+    let methods: &[NativeMethod] = &[
+        jmethod!(Java_com_linkedin_android_rsdroid_RustCore_get, "(Ljava/lang/String;)Ljava/lang/String;".into()),
+        jmethod!(Java_com_linkedin_android_rsdroid_RustCore_save, "(Ljava/lang/String;Ljava/lang/String;)V".into()),
+    ];
+    env.register_native_methods(jcls, methods).unwrap();
+
+
+
 
     JNI_VERSION_1_6
 }

@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.linkedin.android.kotinrustproto.databinding.ActivityMainBinding
 import com.linkedin.android.proto.Proto
 import com.linkedin.android.rsdroid.RustCore
+import com.tencent.mmkv.MMKV
 import java.lang.RuntimeException
 
 class MainActivity : AppCompatActivity() {
@@ -16,6 +17,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater);
         binding.text.text = RustCore.instance.greeting();
 
+        MMKV.initialize(this);
         val funEmpty = object : Fun {
             override fun onCall(i : Int) {
                 RustCore.instance.empty();
@@ -49,6 +51,27 @@ class MainActivity : AppCompatActivity() {
 
             override fun String(): String {
                 return "Java Mem Write"
+            }
+        }
+
+        var kv = MMKV.defaultMMKV();
+        var funMMKVRead = object : Fun {
+            override fun onCall(i : Int) {
+                kv.decodeString("test_%d".format(i))
+            }
+
+            override fun String(): String {
+                return "MMKV Read"
+            }
+        }
+
+        var funMMKVWrite = object : Fun {
+            override fun onCall(i : Int) {
+                kv.encode("test_%d".format(i), "value_%d_10086".format(i));
+            }
+
+            override fun String(): String {
+                return "MMKV Write"
             }
         }
 
@@ -92,6 +115,9 @@ class MainActivity : AppCompatActivity() {
             )
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMem)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMemRead)
+
+            binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMMKVRead)
+            binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMMKVWrite)
         });
 
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
