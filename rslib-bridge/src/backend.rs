@@ -1,6 +1,7 @@
-use crate::proto::{BackendResult, DroidBackendService, Resp, SaveIn, Str, OpenIn};
+use crate::proto::{BackendResult, DroidBackendService, Resp, SaveIn, Str, OpenIn, TestIn};
 use crate::{db, lmdb, mem};
 use rkv::Value;
+use crate::proto::TestOut;
 
 use std::path::Path;
 use std::sync::atomic::{AtomicI32, Ordering};
@@ -103,5 +104,11 @@ impl DroidBackendService for Backend {
             }
         }
         Ok(Str { val: "".to_owned() })
+    }
+
+    fn test(&self, input: TestIn) -> BackendResult<TestOut> {
+        Ok(TestOut {
+            a : "test".into(),
+        })
     }
 }

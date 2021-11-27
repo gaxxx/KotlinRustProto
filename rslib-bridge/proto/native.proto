@@ -8,6 +8,7 @@ service DroidBackendService {
     rpc Create(OpenIn) returns (Resp);
     rpc Save(SaveIn) returns (Resp);
     rpc Get(Str) returns (Str);
+    rpc Test(TestIn) returns (TestOut);
 }
 
 message OpenIn {
@@ -27,6 +28,15 @@ message SaveIn{
 message Resp{
     sint32 ret = 1;
     string msg = 2;
+}
+
+message TestIn {
+    string A = 1;
+    string B = 2;
+}
+
+message TestOut {
+    string A = 1;
 }
 
 message Empty {}

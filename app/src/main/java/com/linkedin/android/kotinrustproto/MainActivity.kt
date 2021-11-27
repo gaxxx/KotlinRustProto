@@ -26,6 +26,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        RustCore.navHelper.test(
+            Proto.TestIn.newBuilder().setA("aa").setB("bb").build(),
+            object : RustCore.Callback<Proto.TestOut> {
+                override fun onSuccess(arg: Proto.TestOut) {
+                    if (arg.a != "test") {
+                        throw RuntimeException("ooops in onSuccess")
+                    }
+                }
+
+                override fun onErr(code: Int, msg: String) {
+                    throw RuntimeException("ooops in onErr")
+                }
+            }
+        );
+
         var map : HashMap<String, String> = HashMap();
         val funMem = object : Fun {
             override fun onCall(i : Int) {
