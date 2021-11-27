@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.linkedin.android.kotinrustproto.databinding.ActivityMainBinding
 import com.linkedin.android.proto.Proto
 import com.linkedin.android.rsdroid.RustCore
-import java.lang.Exception
 import java.lang.RuntimeException
 
 class MainActivity : AppCompatActivity() {
@@ -74,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMemRead);
             RustCore.navHelper.create(
                 Proto.OpenIn.newBuilder().setPath("").setMode(0).build(),
-                emptyCallback,
+                respCallback,
             )
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMem)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMemRead)
@@ -126,7 +125,7 @@ class MainActivity : AppCompatActivity() {
         binding.fuckingSlow.setOnClickListener({
             val path: String = applicationContext.cacheDir.absolutePath + "/test"
             var dbPath = Proto.OpenIn.newBuilder().setPath(path).setMode(2).build();
-            RustCore.navHelper.create(dbPath, emptyCallback)
+            RustCore.navHelper.create(dbPath, respCallback)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledWrite);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledRead);
         });
@@ -148,7 +147,7 @@ class MainActivity : AppCompatActivity() {
         binding.lmdb.setOnClickListener {
             val path: String = applicationContext.cacheDir.absolutePath + "/lmdb"
             var dbPath = Proto.OpenIn.newBuilder().setPath(path).setMode(1).build();
-            RustCore.navHelper.create(dbPath, emptyCallback)
+            RustCore.navHelper.create(dbPath, respCallback)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funLmdbWrite);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funLmdbRead);
         };
@@ -301,7 +300,7 @@ class MainActivity : AppCompatActivity() {
             RustCore.navHelper.save(Proto.SaveIn.newBuilder()
                 .setKey("test_%d".format(i))
                 .setVal("value_%d_10086".format(i)).build(),
-                emptyCallback)
+                respCallback)
         }
 
         abstract override fun String() : String
@@ -324,8 +323,8 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-object emptyCallback : RustCore.Callback<Proto.Empty> {
-    override fun onSuccess(arg: Proto.Empty) {
+object respCallback : RustCore.Callback<Proto.Resp> {
+    override fun onSuccess(arg: Proto.Resp) {
         super.onSuccess(arg)
     }
 

@@ -35,15 +35,9 @@ class RPC:
         
     def __repr__(self):
         output = self.get_output()
-        has_resp = "false"
-        if output.endswith(".Resp"):
-            has_resp = "true"
-            output = output.replace(".Resp", ".Empty")
-
         # These previously were very different - validation changed this.
         # Might want to merge these branches now they're so similar.
         return '''public void {name}({input} args, RustCore.Callback<{output}> cb) {{
-    boolean hasResp = {has_resp};
     byte[] resp = RESP_PROTO.clone();
     byte[] result = executeCommand({number}, args.toByteArray(), resp);
     if (cb == null) {{
@@ -57,24 +51,15 @@ class RPC:
         }}
     }}
     
-    if (hasResp) {{
-        {pkg}.Proto.Resp r = getResp(resp);
-        if (r != null && r.getRet() != 0) {{
-            cb.onErr(r.getRet() , r.getMsg());
-            return;
-        }}
-        cb.onSuccess({output}.getDefaultInstance());
-    }} else {{
-        {output} message = null;
-        try {{
-            message = {output}.parseFrom(result);
-        }} catch (InvalidProtocolBufferException e) {{
-            e.printStackTrace();
-        }}
-        cb.onSuccess(message);
-        }}
+    {output} message = null;
+    try {{
+        message = {output}.parseFrom(result);
+    }} catch (InvalidProtocolBufferException e) {{
+        e.printStackTrace();
+    }}
+    cb.onSuccess(message);
     }}'''.format(input=self.get_input(), output=output,
-                 has_resp = has_resp, name = self.method_name(), number = self.command_num,
+                 name = self.method_name(), number = self.command_num,
                  pkg = self.pkg
                    )
 
