@@ -4,9 +4,10 @@ import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.linkedin.android.kotinrustproto.databinding.ActivityMainBinding
-import com.linkedin.android.proto.Native
+import com.linkedin.android.proto.Proto
 import com.linkedin.android.rsdroid.RustCore
 import java.lang.Exception
+import java.lang.RuntimeException
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -72,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMem);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMemRead);
             RustCore.navHelper.create(
-                Native.OpenIn.newBuilder().setPath("").setMode(0).build(),
+                Proto.OpenIn.newBuilder().setPath("").setMode(0).build(),
                 emptyCallback,
             )
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMem)
@@ -124,7 +125,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.fuckingSlow.setOnClickListener({
             val path: String = applicationContext.cacheDir.absolutePath + "/test"
-            var dbPath = Native.OpenIn.newBuilder().setPath(path).setMode(2).build();
+            var dbPath = Proto.OpenIn.newBuilder().setPath(path).setMode(2).build();
             RustCore.navHelper.create(dbPath, emptyCallback)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledWrite);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledRead);
@@ -146,7 +147,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.lmdb.setOnClickListener {
             val path: String = applicationContext.cacheDir.absolutePath + "/lmdb"
-            var dbPath = Native.OpenIn.newBuilder().setPath(path).setMode(1).build();
+            var dbPath = Proto.OpenIn.newBuilder().setPath(path).setMode(1).build();
             RustCore.navHelper.create(dbPath, emptyCallback)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funLmdbWrite);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funLmdbRead);
@@ -297,7 +298,7 @@ class MainActivity : AppCompatActivity() {
 
     abstract class NavSaveFun : Fun {
         override fun onCall(i: Int) {
-            RustCore.navHelper.save(Native.SaveIn.newBuilder()
+            RustCore.navHelper.save(Proto.SaveIn.newBuilder()
                 .setKey("test_%d".format(i))
                 .setVal("value_%d_10086".format(i)).build(),
                 emptyCallback)
@@ -309,7 +310,7 @@ class MainActivity : AppCompatActivity() {
 
     abstract class NavReadFun : Fun {
         override fun onCall(i: Int) {
-            RustCore.navHelper.get(Native.Str.newBuilder().setVal("test_%d".format(i)).build()
+            RustCore.navHelper.get(Proto.Str.newBuilder().setVal("test_%d".format(i)).build()
                 , strCallback)
         }
 
@@ -323,8 +324,8 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-object emptyCallback : RustCore.Callback<Native.Empty> {
-    override fun onSuccess(arg: Native.Empty) {
+object emptyCallback : RustCore.Callback<Proto.Empty> {
+    override fun onSuccess(arg: Proto.Empty) {
         super.onSuccess(arg)
     }
 
@@ -333,12 +334,12 @@ object emptyCallback : RustCore.Callback<Native.Empty> {
     }
 }
 
-object strCallback : RustCore.Callback<Native.Str> {
-    override fun onSuccess(arg: Native.Str) {
+object strCallback : RustCore.Callback<Proto.Str> {
+    override fun onSuccess(arg: Proto.Str) {
         super.onSuccess(arg)
     }
 
     override fun onErr(code: Int, msg: String) {
-        throw Exception("ooops")
+        throw RuntimeException("ooops")
     }
 }

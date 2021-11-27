@@ -69,9 +69,9 @@ pub trait DroidBackendService {
     }
     let signature = &service.methods.iter().map(|m| {
         format!("{}:{}:{}", m.input_type, m.name, m.output_type)
-    }).join("\n");
+    }).join("|");
     buf.push_str(&format!(r#"
-        fn signure() -> &'static str {{
+        pub fn signature() -> &'static str {{
             return "{}";
         }}
     "#, signature));

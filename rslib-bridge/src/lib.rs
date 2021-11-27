@@ -14,7 +14,7 @@ use backtrace::Backtrace;
 use jni::objects::{JByteBuffer, JClass, JObject, ReleaseMode};
 use jni::sys::{jbyteArray, jint, jstring, JNI_VERSION_1_6};
 use jni::{JNIEnv, JavaVM};
-use std::ffi::{c_void, CString};
+use std::ffi::{c_void};
 use std::{panic, thread};
 use prost::{Message};
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -39,9 +39,8 @@ pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_greeting(
     env: JNIEnv,
     _: JClass,
 ) -> jstring {
-    let world_ptr = CString::new("Hello world from Rust world").unwrap();
     let output = env
-        .new_string(world_ptr.to_str().unwrap())
+        .new_string("Hello world from Rust world")
         .expect("Couldn't create java string!");
     output.into_inner()
 }
@@ -196,6 +195,19 @@ unsafe fn fill_resp(env : JNIEnv, resp : jbyteArray, code : i32, s : String) -> 
     buf.advance_mut(1);
     prost::encode_length_delimiter(buf.remaining_mut() - 1, &mut buf)?;
     Ok(())
+}
+
+
+#[no_mangle]
+pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_signature(
+    env: JNIEnv,
+    _: JClass,
+) -> jstring {
+    let sig = Backend::signature();
+    let output = env
+        .new_string(sig)
+        .expect("Couldn't create java string!");
+    output.into_inner()
 }
 
 #[no_mangle]
