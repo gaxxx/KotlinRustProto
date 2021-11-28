@@ -102,7 +102,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Press Each button to run 1000 times"
+                android:text="Press Each button to run 10000 times"
                 />
             <TextView
                 android:layout_width="match_parent"

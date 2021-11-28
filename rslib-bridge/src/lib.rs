@@ -25,12 +25,12 @@ use std::mem::MaybeUninit;
 // This is a simple macro named `say_hello`.
 macro_rules! jmethod{
 
-    ($fun:tt, $sig: expr ) => {
+    ($jmethod: expr, $rmethod:tt, $sig: expr ) => {
         // The macro will expand into the contents of this block.
         NativeMethod {
-            name : stringify!($fun).into(),
+            name : $jmethod.into(),
             sig : $sig,
-            fn_ptr : $fun as *mut c_void,
+            fn_ptr : $rmethod as *mut c_void,
 
         }
     };
@@ -42,18 +42,17 @@ pub extern "system" fn JNI_OnLoad(vm : JavaVM, _: *mut c_void) -> jint {
     android_logger::init_once(
         Config::default()
             .with_tag("RustNativeCore")
-            .with_min_level(log::Level::Trace),
+            .with_min_level(log::Level::Warn),
     );
 
     let env = vm.get_env().unwrap();
     let jcls = env.find_class("com/linkedin/android/rsdroid/RustCore").unwrap();
     let methods: &[NativeMethod] = &[
-        jmethod!(Java_com_linkedin_android_rsdroid_RustCore_get, "(Ljava/lang/String;)Ljava/lang/String;".into()),
-        jmethod!(Java_com_linkedin_android_rsdroid_RustCore_save, "(Ljava/lang/String;Ljava/lang/String;)V".into()),
+        jmethod!("get", get, "(Ljava/lang/String;)Ljava/lang/String;".into()),
+        jmethod!("save", save, "(Ljava/lang/String;Ljava/lang/String;)V".into()),
+        jmethod!("run", run, "(I[B[B)[B".into()),
     ];
     env.register_native_methods(jcls, methods).unwrap();
-
-
 
 
     JNI_VERSION_1_6
@@ -88,7 +87,7 @@ pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_readString(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_save(
+pub unsafe extern "C" fn save(
     env: JNIEnv,
     _: JClass,
     key : jstring,
@@ -104,7 +103,7 @@ pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_save(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_get(
+pub unsafe extern "C" fn get(
     env: JNIEnv,
     _: JClass,
     key : jstring,
@@ -236,7 +235,7 @@ pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_signature(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_com_linkedin_android_rsdroid_RustCore_run(
+pub unsafe extern "C" fn run(
     env: JNIEnv,
     _: JClass,
     command: jint,

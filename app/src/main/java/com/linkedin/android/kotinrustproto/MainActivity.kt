@@ -325,7 +325,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun testFunc(ff : Fun) : String {
-        val iterCount = 1000;
+        val iterCount = 10000;
         var start = System.currentTimeMillis();
         for (i in 0..iterCount) {
             ff.onCall(i);
