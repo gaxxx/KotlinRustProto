@@ -64,9 +64,9 @@ RustCore.navHelper.test(
 
 # What's more
 My first goal is to embed a high performance kvstore into Kotlin, namely lmdb, sled, etc.
-Then it goes to what it likes now after some iterations and could do some little more things. [here](https://blog.gaxxx.me/kotin-with-rust/) is how I make it work step by step...
+Then it goes to what it likes now after some iterations and could do some more. [here](https://blog.gaxxx.me/kotin-with-rust/) is how I make it work step by step...
 
-Also as it works in this demo
+As it works in this demo
 run each function for 10000 times, and here is the result, in my real phone (Xiaomi 10).
 
 
@@ -88,13 +88,13 @@ run each function for 10000 times, and here is the result, in my real phone (Xia
 | SharedPrefence read | 81ms |
 
 1. [MMKV](https://github.com/Tencent/MMKV) is the fastest solution, really close to native hashmap. 
-2. Protobuf encoding / decoding is a bottleneck. It may takes an extra 100ms. To that note, sled is quite close to the MMKV if we don't count the protobuf thing in sled operations.
+2. Protobuf encoding / decoding is a bottleneck. It may takes an extra 100ms. To that note, sled is quite close to the MMKV if we don't count the protobuf thing in.
 3. Sled outperforms SharedPrefence & Lmdb, a lot. Of course, rust is stable enough, but to put it into real productions, there is more work to do, something like
   * add multiprocess support
   * space error handling
 
 
 As a toy project, it works. Maybe with protobuf, the performance is not good enough.
-But on the other hand, with protobuf support, we could build some core features in Rust and invoke them in other languages like swift, flutter etc.
+But on the other hand, with protobuf support, we could build some core features in Rust and  integrate them with other languages like swift, flutter etc.
 
 happy hacking
