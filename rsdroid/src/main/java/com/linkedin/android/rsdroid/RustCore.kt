@@ -12,6 +12,7 @@ class RustCore {
     external fun readString(s: String)
 
     external fun save(key: String, v: String)
+    external fun sledSave(key: String, v: String)
     external fun get(key: String): String
 
     external fun emptySetB(s: ByteArray)

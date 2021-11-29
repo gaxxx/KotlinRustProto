@@ -80,6 +80,7 @@ run each function for 10000 times, and here is the result, in my real phone (Xia
 | Jni cocurrent Hashmap with Proto encoding / decoding | 200ms | 
 | MMKV write | 189ms|
 | MMKV read | 98ms | 
+| Sled write without Proto | 200ms | 
 | Sled write with Proto | 347ms | 
 | Sled read with Proto | 200ms |
 | Lmdb write with Proto | 4300ms |
@@ -88,7 +89,7 @@ run each function for 10000 times, and here is the result, in my real phone (Xia
 | SharedPrefence read | 81ms |
 
 1. [MMKV](https://github.com/Tencent/MMKV) is the fastest solution, really close to native hashmap. 
-2. Protobuf encoding / decoding is a bottleneck. It may takes an extra 100ms. To that note, sled is quite close to the MMKV if we don't count the protobuf thing in.
+2. Protobuf encoding / decoding is a bottleneck. It may takes an extra 100ms. On that note, sled is quite close to the MMKV if we don't count the protobuf thing in. (Sled write without proto)
 3. Sled outperforms SharedPrefence & Lmdb, a lot. Of course, rust is stable enough, but to put it into real productions, there is more work to do, something like
   * add multiprocess support
   * space error handling

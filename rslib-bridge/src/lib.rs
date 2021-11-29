@@ -50,6 +50,7 @@ pub extern "system" fn JNI_OnLoad(vm : JavaVM, _: *mut c_void) -> jint {
     let methods: &[NativeMethod] = &[
         jmethod!("get", get, "(Ljava/lang/String;)Ljava/lang/String;".into()),
         jmethod!("save", save, "(Ljava/lang/String;Ljava/lang/String;)V".into()),
+        jmethod!("sledSave", sled_save, "(Ljava/lang/String;Ljava/lang/String;)V".into()),
         jmethod!("run", run, "(I[B[B)[B".into()),
     ];
     env.register_native_methods(jcls, methods).unwrap();
@@ -99,7 +100,22 @@ pub unsafe extern "C" fn save(
         env.get_string(key.into()).unwrap().into(),
         env.get_string(value.into()).unwrap().into(),
     );
+}
 
+#[no_mangle]
+pub unsafe extern "C" fn sled_save(
+    env: JNIEnv,
+    _: JClass,
+    key : jstring,
+    value : jstring,
+) {
+    let db = db::store();
+    let key =env.get_string(key.into()).unwrap();
+    let value = env.get_string(value.into()).unwrap();
+    db.set(
+        key.to_str().unwrap(),
+        value.to_str().unwrap(),
+    );
 }
 
 #[no_mangle]

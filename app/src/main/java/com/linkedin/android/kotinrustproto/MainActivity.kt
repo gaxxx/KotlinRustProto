@@ -161,6 +161,19 @@ class MainActivity : AppCompatActivity() {
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funShareRead);
         })
 
+        val funSledSave = object : Fun {
+            override fun onCall(i: Int) {
+                RustCore.instance.sledSave(
+                    "test_%d".format(i),
+                    "value_%d_10086".format(i)
+                );
+            }
+
+            override fun String(): String {
+                return "SledSave without protobuf"
+            }
+        }
+
 
         val funSledWrite = object : NavSaveFun() {
             override fun String(): String {
@@ -180,6 +193,7 @@ class MainActivity : AppCompatActivity() {
             val path: String = applicationContext.cacheDir.absolutePath + "/test"
             var dbPath = Proto.OpenIn.newBuilder().setPath(path).setMode(2).build();
             RustCore.navHelper.create(dbPath, respCallback)
+            binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledSave);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledWrite);
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funSledRead);
         });
