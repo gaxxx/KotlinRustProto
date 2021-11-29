@@ -98,9 +98,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val funNativeMemRead = object : NavReadFun() {
+        val funNativeMemRead = object : Fun {
+            override fun onCall(i : Int) {
+                RustCore.instance.get(
+                    "test_%d".format(i),
+                )
+            }
+
             override fun String(): String {
                 return "Native Mem Read"
+            }
+        }
+
+        val funNativeMemProtoRead = object : NavReadFun() {
+            override fun String(): String {
+                return "Native Mem Read with Proto encoding"
             }
         }
 
@@ -115,6 +127,7 @@ class MainActivity : AppCompatActivity() {
             )
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMem)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMemRead)
+            binding.text.text = binding.text.text.toString() + "\n" + testFunc(funNativeMemProtoRead)
 
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMMKVRead)
             binding.text.text = binding.text.text.toString() + "\n" + testFunc(funMMKVWrite)
