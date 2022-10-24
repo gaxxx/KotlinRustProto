@@ -21,7 +21,7 @@ protobuf {
     System.out.println("protoc-gen: '${f.absolutePath}'")
     plugins {
         javalite {
-            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0:osx-x86_64'
         }
     }
     plugins {
@@ -29,7 +29,7 @@ protobuf {
         native_rpc { path = f.absolutePath }
     }
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.8.0'
+        artifact = 'com.google.protobuf:protoc:3.8.0:osx-x86_64'
     }
     // this is a task which wil generate classes for our proto files
     generateProtoTasks {

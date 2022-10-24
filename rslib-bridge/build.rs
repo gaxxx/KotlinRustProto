@@ -71,7 +71,7 @@ pub trait DroidBackendService {
         format!("{}:{}:{}", m.input_type, m.name, m.output_type)
     }).join("|");
     buf.push_str(&format!(r#"
-        pub fn signature() -> &'static str {{
+        fn signature() -> &'static str {{
             return "{}";
         }}
     "#, signature));
